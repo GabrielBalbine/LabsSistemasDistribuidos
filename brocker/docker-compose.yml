@@ -7,7 +7,6 @@ services:
     container_name: broker
     ports:
       - 5555:5555
-      - 5556:5556
 
   servidor:
     build:
@@ -15,6 +14,8 @@ services:
       dockerfile: Dockerfile_servidor
     depends_on:
       - broker
+    deploy:
+      replicas: 3
 
   cliente:
     build:
@@ -22,3 +23,5 @@ services:
       dockerfile: Dockerfile_cliente
     depends_on:
       - servidor
+    deploy:
+      replicas: 2
