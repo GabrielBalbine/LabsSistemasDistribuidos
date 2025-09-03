@@ -1,0 +1,78 @@
+import zmq
+
+context = zmq.Context()
+socket = context.socket(zmq.REP)
+socket.connect("tcp://broker:5556")
+
+tarefas = dict()
+cont = 0
+
+while True:
+    request = socket.recv_json()
+    opcao = request["opcao"]
+    dados = request["dados"]
+    reply = "ERRO: função não escolhida"
+
+    match opcao:
+        case "adicionar":
+            tarefas[cont] = dados
+            cont += 1
+            reply = "OK"
+
+        case "atualizar":
+            id_str = dados.get("id")
+            novos_dados = dados.get("novos_dados") #dicionario de novos dados
+            reply = "ERRO: Dados inválidos ou ID não fornecido."
+
+            if id_str and novos_dados:
+                try:
+                    id_para_atualizar = int(id_str)
+
+                    #verificamos a existencia do id
+                    if id_para_atualizar in tarefas:
+                        #se existe, atualizamos
+                        tarefas[id_para_atualizar].update(novos_dados)
+                        reply = "OK"
+                        print(f"Tarefa {id_para_atualizar} atualizada.")
+                    
+                    else:
+                        reply = "ERRO: Tarefa com ID nao encontrado"
+                    
+                except (ValueError, TypeError):
+                    #se a conversao do int ou do id der b.o
+                    print(f"Tentativa de atualização falha com dados inválidos: {dados}")
+                    reply = "ERRO: Formato inválido"
+
+
+        case "deletar":
+            #get pega de forma segura
+            id_str = dados.get("id")
+            reply = "ERRO: ID inválido ou não fornecido."
+
+            #verifica a existencia desse ID
+            if id_str:
+                try:
+                    id_para_deletar = int(id_str)
+
+                    if id_para_deletar in tarefas:
+                        del tarefas[id_para_deletar] #se existia, nao existe mais
+                        reply = "OK"
+                    else:
+                        reply = "ERRO: Tarefa com este ID não encontrada"
+                
+                except ValueError:
+                    #se int(id_str) falhar, o erro tá definido
+                    print(f"Tentativa de remoção com ID inválido: {id_str}")
+
+        case "listar":
+            print("Enviando a lista de tarefas:...")
+            reply = tarefas
+            socket.send_json(reply)
+            continue
+
+        case "buscar":
+            pass
+        case _ :
+            reply = "ERRO: função não encontrada"
+
+    socket.send_string(reply)
