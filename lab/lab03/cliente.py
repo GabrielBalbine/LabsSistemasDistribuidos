@@ -101,7 +101,32 @@ while opcao != "sair":
                     print("-"*20)
                 print("--------------------\n")
         case "buscar":
-            pass
+            termo = input("Digite o termo que deseja buscar no título ou na descrição:")
+
+            #monta a requisicao com o termo da busca
+            request = {
+                "opcao":"buscar",
+                "dados": {
+                    "termo":termo
+                }
+            }
+            print(f"\nBuscando por '{termo}'...")
+            socket.send_json(request)
+
+            #recebe a listinha de results
+            resultados_busca = socket.recv_json()
+
+            #exibe os resultados, igual o listar
+            print(f"--- Resultados da Busca por '{termo}' ---")
+            if not resultados_busca:
+                print("Nenhuma tarefa encontrada com este termo")
+            else:
+                for id, tarefa in resultados_busca.items():
+                    print(f" ID: {id}")
+                    print(f" Titulo:{tarefa['titulo']}")
+                    print(f" Descricao: {tarefa['desc']}")
+                    print("-"*20)
+                    print("------------------------------\n")
         case _:
             print("Opção não encontrada")
 

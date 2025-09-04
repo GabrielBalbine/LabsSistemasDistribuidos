@@ -71,7 +71,24 @@ while True:
             continue
 
         case "buscar":
-            pass
+            termo_busca = dados.get("termo","").lower() #pega o termo e converte para minuscula
+            resultados = {} #dicionario pra guardar oq foi encontrado
+
+            if termo_busca: #busca caso exista né
+                #itera os ids da tarefa
+                for id_tarefa, info_tarefa in tarefas.items():
+                    titulo = info_tarefa.get("titulo","").lower()
+                    desc = info_tarefa.get("desc","").lower()
+
+                    #verifica se o termo ta no titulo ou na descricao
+                    if termo_busca in titulo or termo_busca in desc:
+                        resultados[id_tarefa] = info_tarefa #adiciona ela ao resultado
+
+            print(f"Busca por '{termo_busca}' encontrou {len(resultados)} resultado(s)")
+            #envia os resultados, que podem estar vazios na real
+            socket.send_json(resultados)
+            continue #pula o send string no fim do loop ali
+
         case _ :
             reply = "ERRO: função não encontrada"
 
